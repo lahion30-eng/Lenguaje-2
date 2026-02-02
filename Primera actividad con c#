@@ -1,0 +1,20 @@
+//Empezare definiendo las variables
+string nombre, apellido; 
+int edad;
+float altura;
+
+// aqui el usuario agrega su informacion
+Console.Write("Coloque su nombre: ");
+ nombre = Console.ReadLine();
+
+Console.Write("Coloque su apellido: ");
+apellido = Console.ReadLine();
+
+Console.Write("Coloque su edad: ");
+edad = int.Parse(Console.ReadLine());
+
+Console.Write("Coloque su altura: ");
+altura = float.Parse(Console.ReadLine());
+
+//imprimimos la informacion ingresada previamente
+Console.WriteLine($"Estimado {nombre} {apellido}, tu edad es {edad} años y tu altura es de {altura} pies.");
