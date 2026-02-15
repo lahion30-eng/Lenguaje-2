@@ -1,0 +1,50 @@
+using Spectre.Console;
+
+var table = new Table().Border(TableBorder.Rounded);
+
+table.AddColumn("[yellow]No. Cuota[/]");
+table.AddColumn("[green]Pago de cuota[/]");
+table.AddColumn("[red]Interés[/]");
+table.AddColumn("[blue]Abono a capital[/]");
+table.AddColumn("[white]Saldo[/]");
+
+decimal montoPrestamo = AnsiConsole.Prompt(
+    new TextPrompt<decimal>("[cyan]Ingresa el monto del préstamo:[/]")
+        .Validate(x => x > 0 ? ValidationResult.Success() : ValidationResult.Error("[red]Debe ser mayor que 0[/]"))
+);
+
+decimal interesAnual = AnsiConsole.Prompt(
+    new TextPrompt<decimal>("[cyan]Ingresa el interés anual (%):[/]")
+        .Validate(x => x > 0 ? ValidationResult.Success() : ValidationResult.Error("[red]Debe ser mayor que 0[/]"))
+);
+
+int plazoPrestamo = AnsiConsole.Prompt(
+    new TextPrompt<int>("[cyan]Ingresa el plazo del préstamo (meses):[/]")
+        .Validate(x => x > 0 ? ValidationResult.Success() : ValidationResult.Error("[red]Debe ser mayor que 0[/]"))
+);
+
+decimal interesMensual = interesAnual / 12 / 100;
+decimal n = (decimal)Math.Pow(1 + (double)interesMensual, plazoPrestamo);
+decimal d = n - 1;
+decimal cuotaFija = montoPrestamo * interesMensual * (n / d);
+
+for (int i = 0; i < plazoPrestamo; i++)
+{
+    decimal interesAPagar = montoPrestamo * interesMensual;
+    decimal abonoCapital = cuotaFija - interesAPagar;
+    montoPrestamo -= abonoCapital;
+
+    if (montoPrestamo < 0)
+        montoPrestamo = 0;
+
+    table.AddRow(
+        (i + 1).ToString(),
+        $"${cuotaFija:F2}",
+        $"${interesAPagar:F2}",
+        $"${abonoCapital:F2}",
+        $"${montoPrestamo:F2}"
+    );
+}
+
+AnsiConsole.Write(table);
+AnsiConsole.MarkupLine("\n[bold green]Tabla generada correctamente ✔[/]");
