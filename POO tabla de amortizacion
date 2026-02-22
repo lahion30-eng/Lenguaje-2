@@ -1,0 +1,113 @@
+using Spectre.Console;
+using System;
+using System.Collections.Generic;
+
+class Program
+{
+    static void Main()
+    {
+        Program programa = new Program();
+        programa.Ejecutar();
+    }
+
+    public void Ejecutar()
+    {
+        var datos = CapturarDatos();
+        var amortizacion = CalcularAmortizacion(datos.monto, datos.interesAnual, datos.plazo);
+        var tabla = GenerarTabla(amortizacion);
+        MostrarResultados(tabla);
+    }
+
+    // ===============================
+    // MÉTODO 1: Capturar Datos
+    // ===============================
+    private (decimal monto, decimal interesAnual, int plazo) CapturarDatos()
+    {
+        decimal montoPrestamo = AnsiConsole.Prompt(
+            new TextPrompt<decimal>("[cyan]Ingresa el monto del préstamo:[/]")
+                .Validate(x => x > 0 
+                    ? ValidationResult.Success() 
+                    : ValidationResult.Error("[red]Debe ser mayor que 0[/]"))
+        );
+
+        decimal interesAnual = AnsiConsole.Prompt(
+            new TextPrompt<decimal>("[cyan]Ingresa el interés anual (%):[/]")
+                .Validate(x => x > 0 
+                    ? ValidationResult.Success() 
+                    : ValidationResult.Error("[red]Debe ser mayor que 0[/]"))
+        );
+
+        int plazoPrestamo = AnsiConsole.Prompt(
+            new TextPrompt<int>("[cyan]Ingresa el plazo del préstamo (meses):[/]")
+                .Validate(x => x > 0 
+                    ? ValidationResult.Success() 
+                    : ValidationResult.Error("[red]Debe ser mayor que 0[/]"))
+        );
+
+        return (montoPrestamo, interesAnual, plazoPrestamo);
+    }
+
+    // ===============================
+    // MÉTODO 2: Calcular Amortización
+    // ===============================
+    private List<(int cuota, decimal cuotaFija, decimal interes, decimal abonoCapital, decimal saldo)> 
+        CalcularAmortizacion(decimal montoPrestamo, decimal interesAnual, int plazoPrestamo)
+    {
+        List<(int, decimal, decimal, decimal, decimal)> lista = new();
+
+        decimal interesMensual = interesAnual / 12 / 100;
+        decimal n = (decimal)Math.Pow(1 + (double)interesMensual, plazoPrestamo);
+        decimal d = n - 1;
+        decimal cuotaFija = montoPrestamo * interesMensual * (n / d);
+
+        for (int i = 0; i < plazoPrestamo; i++)
+        {
+            decimal interesAPagar = montoPrestamo * interesMensual;
+            decimal abonoCapital = cuotaFija - interesAPagar;
+            montoPrestamo -= abonoCapital;
+
+            if (montoPrestamo < 0)
+                montoPrestamo = 0;
+
+            lista.Add((i + 1, cuotaFija, interesAPagar, abonoCapital, montoPrestamo));
+        }
+
+        return lista;
+    }
+
+    // ===============================
+    // MÉTODO 3: Generar Tabla
+    // ===============================
+    private Table GenerarTabla(List<(int cuota, decimal cuotaFija, decimal interes, decimal abonoCapital, decimal saldo)> datos)
+    {
+        var table = new Table().Border(TableBorder.Rounded);
+
+        table.AddColumn("[yellow]No. Cuota[/]");
+        table.AddColumn("[green]Pago de cuota[/]");
+        table.AddColumn("[red]Interés[/]");
+        table.AddColumn("[blue]Abono a capital[/]");
+        table.AddColumn("[white]Saldo[/]");
+
+        foreach (var fila in datos)
+        {
+            table.AddRow(
+                fila.cuota.ToString(),
+                $"${fila.cuotaFija:F2}",
+                $"${fila.interes:F2}",
+                $"${fila.abonoCapital:F2}",
+                $"${fila.saldo:F2}"
+            );
+        }
+
+        return table;
+    }
+
+    // ===============================
+    // MÉTODO 4: Mostrar Resultados
+    // ===============================
+    private void MostrarResultados(Table tabla)
+    {
+        AnsiConsole.Write(tabla);
+        AnsiConsole.MarkupLine("\n[bold green]Tabla generada correctamente ✔[/]");
+    }
+}
